@@ -1,0 +1,40 @@
+# Operating-system files
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Editor / IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+tmp/
+temp/
+
+# Dependency and build folders (none are needed by this project)
+node_modules/
+build/
+artifacts/
+cache/
+dist/
+
+# Remix local artifacts
+.deps/
+.states/
+
+# Secrets - never commit keys or seed phrases
+.env
+.env.*
+*.pem
+*.key
+secrets.*
+
+# Submission archive (submitted separately, not part of the repository)
+*.zip

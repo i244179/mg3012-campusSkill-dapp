@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CampusSkill is a decentralized learning milestone registry on Ethereum Sepolia. Students publish personal learning milestones from their own wallets and mark them as completed on-chain.">
+  <meta name="theme-color" content="#060a18">
+  <title>CampusSkill · On-Chain Learning Milestone Registry</title>
+  <link rel="icon" href="assets/campus-learning.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ================= HEADER ================= -->
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M4 16.5 9 19l5-2.5L9 14z" fill="#0B1020"/>
+            <path d="M10 10.5 15 13l5-2.5L15 8z" fill="#0B1020" fill-opacity=".75"/>
+            <path d="M4 10.5 9 13l5-2.5L9 8z" fill="#fff" fill-opacity=".9"/>
+            <path d="M10 4.5 15 7l5-2.5L15 2z" fill="#fff"/>
+          </svg>
+        </div>
+        <div>
+          <h1>CampusSkill</h1>
+          <p>Your learning milestones, recorded on-chain.</p>
+        </div>
+      </div>
+
+      <div class="status-group">
+        <span class="pill" id="networkPill" title="Active wallet network">
+          <span class="dot" id="networkDot" data-state="idle" aria-hidden="true"></span>
+          <span>Network: <strong id="networkLabel">Not connected</strong></span>
+        </span>
+        <span class="pill" id="walletPill" title="Wallet connection status">
+          <span class="dot" id="walletDot" data-state="idle" aria-hidden="true"></span>
+          <span>Wallet: <strong id="walletLabel">Not connected</strong></span>
+        </span>
+        <button type="button" class="btn btn-primary" id="connectBtn">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="btn-text">Connect MetaMask</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Configuration / wallet / network warnings are rendered here -->
+  <div class="shell banner-area" id="bannerArea" aria-live="polite"></div>
+
+  <!-- ================= MAIN ================= -->
+  <main id="main" class="shell layout">
+    <div class="main-col">
+
+      <!-- Hero -->
+      <section class="hero" aria-labelledby="heroTitle">
+        <div>
+          <span class="eyebrow" id="heroGreeting">Hi, learner</span>
+          <h2 id="heroTitle">Turn what you learn into a permanent record.</h2>
+          <p class="hero-lead">
+            CampusSkill lets you publish personal learning milestones from your own wallet to the
+            Ethereum Sepolia test network. Every milestone keeps its creator, its timestamps and its
+            completion status on-chain, so anyone can check your progress.
+          </p>
+          <h3 class="visually-hidden" id="howTitle">How CampusSkill works</h3>
+          <ol class="hero-steps" aria-labelledby="howTitle">
+            <li>Connect MetaMask on the Sepolia network</li>
+            <li>Publish a milestone with a title and description</li>
+            <li>Mark it as completed when you have finished it</li>
+          </ol>
+          <div class="hero-actions">
+            <a class="btn btn-dark" href="#createSection">Add a milestone</a>
+            <a class="hero-link" id="contractLink" href="https://sepolia.etherscan.io" target="_blank" rel="noopener noreferrer">View contract on Etherscan</a>
+          </div>
+        </div>
+        <img class="hero-art" src="assets/campus-learning.svg" width="480" height="360"
+             alt="Illustration of three chained blocks rising like stairs toward a completion flag, with a graduation cap and an open book">
+      </section>
+
+      <!-- Dashboard statistics (derived from blockchain data) -->
+      <section aria-labelledby="statsTitle">
+        <h2 id="statsTitle" class="visually-hidden">Registry statistics</h2>
+        <div class="stats">
+          <article class="stat total">
+            <p class="stat-label"><span class="stat-icon" aria-hidden="true">Σ</span> Total milestones</p>
+            <strong class="stat-value" id="statTotal">–</strong>
+            <p class="stat-note">Recorded on Sepolia by all learners</p>
+          </article>
+          <article class="stat done">
+            <p class="stat-label"><span class="stat-icon" aria-hidden="true">✓</span> Completed</p>
+            <strong class="stat-value" id="statCompleted">–</strong>
+            <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="barCompleted"></div></div>
+          </article>
+          <article class="stat pending">
+            <p class="stat-label"><span class="stat-icon" aria-hidden="true">◷</span> Pending</p>
+            <strong class="stat-value" id="statPending">–</strong>
+            <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="barPending"></div></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Timeline -->
+      <section class="card" aria-labelledby="timelineTitle">
+        <div class="card-head">
+          <div>
+            <h2 id="timelineTitle">Learning timeline</h2>
+            <p class="card-sub" id="syncNote">Milestones are read directly from the CampusSkill contract.</p>
+          </div>
+          <div class="toolbar">
+            <div class="segmented" role="group" aria-label="Filter milestones" id="filterGroup">
+              <button type="button" data-filter="all" aria-pressed="true">All</button>
+              <button type="button" data-filter="mine" aria-pressed="false">Mine</button>
+              <button type="button" data-filter="pending" aria-pressed="false">Pending</button>
+              <button type="button" data-filter="completed" aria-pressed="false">Completed</button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="sortBtn" aria-label="Change sort order">Newest first</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="refreshBtn">
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="btn-text">Refresh</span>
+            </button>
+          </div>
+        </div>
+        <div id="timelineContainer" aria-live="polite" aria-busy="false"></div>
+      </section>
+    </div>
+
+    <!-- ================= SIDE COLUMN ================= -->
+    <aside class="side-col" aria-label="Your progress and actions">
+
+      <!-- Personal progress -->
+      <section class="card profile" aria-labelledby="profileTitle">
+        <div class="ring" role="img" id="progressRing" aria-label="Your completion rate">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring-track" cx="60" cy="60" r="54"/>
+            <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="54"/>
+          </svg>
+          <div class="ring-label"><strong id="ringPercent">–</strong><span>complete</span></div>
+        </div>
+        <h2 id="profileTitle">Your progress</h2>
+        <p class="profile-address" id="profileAddress">Connect your wallet to see your milestones.</p>
+        <div class="profile-stats">
+          <span class="chip chip-completed" id="myCompleted">0 completed</span>
+          <span class="chip chip-pending" id="myPending">0 pending</span>
+        </div>
+      </section>
+
+      <!-- Create milestone -->
+      <section class="card" id="createSection" aria-labelledby="createTitle">
+        <div class="card-head">
+          <div>
+            <h2 id="createTitle">New milestone</h2>
+            <p class="card-sub">Published from your wallet as a Sepolia transaction.</p>
+          </div>
+        </div>
+        <form class="form" id="createForm" novalidate>
+          <div class="field">
+            <div class="field-head">
+              <label for="titleInput">Milestone title</label>
+              <span class="counter" id="titleCounter">0 / 80</span>
+            </div>
+            <input class="input" id="titleInput" name="title" type="text" maxlength="80" autocomplete="off"
+                   placeholder="e.g. Completed Solidity Fundamentals" aria-describedby="titleError titleCounter" required>
+            <p class="field-error" id="titleError"></p>
+          </div>
+          <div class="field">
+            <div class="field-head">
+              <label for="descInput">Description</label>
+              <span class="counter" id="descCounter">0 / 280</span>
+            </div>
+            <textarea class="input" id="descInput" name="description" maxlength="280"
+                      placeholder="What did you learn or build? e.g. Wrote and deployed my first contract with structs, mappings and events."
+                      aria-describedby="descError descCounter" required></textarea>
+            <p class="field-error" id="descError"></p>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="createBtn">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-text">Publish milestone</span>
+          </button>
+          <p class="form-note">Limits are 80 and 280 bytes, the same limits the smart contract enforces. Publishing costs a small amount of Sepolia test ETH for gas.</p>
+        </form>
+      </section>
+
+      <!-- Transaction information -->
+      <section class="card tx-card" aria-labelledby="txTitle">
+        <div class="card-head">
+          <h2 id="txTitle">Transaction status</h2>
+        </div>
+        <div class="tx-status" id="txStatus" data-state="idle" role="status">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="txMessage">No transaction yet.</span>
+        </div>
+        <h3 class="visually-hidden" id="txStepsTitle">Transaction progress</h3>
+        <ul class="tx-steps" id="txSteps" aria-labelledby="txStepsTitle">
+          <li data-step="sign">Confirm in MetaMask</li>
+          <li data-step="submit">Submitted to Sepolia</li>
+          <li data-step="confirm">Confirmed on-chain</li>
+        </ul>
+        <dl class="tx-details" id="txDetails"></dl>
+        <h3 class="visually-hidden" id="activityTitle">Transactions in this session</h3>
+        <ul class="activity" id="activityList" aria-labelledby="activityTitle"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="shell">
+      <div class="footer-grid">
+        <div>
+          <h2>CampusSkill</h2>
+          <p>On-chain learning milestone registry running on <strong>Ethereum Sepolia</strong> (chain ID 11155111).</p>
+          <p class="disclaimer">
+            Academic project for MG3012 Blockchain Technology for Business (Assignment 2). Milestones are
+            self-reported by students and are <strong>not</strong> accredited certificates or records issued
+            or verified by any university. Sepolia is a test network and its ETH has no monetary value.
+          </p>
+        </div>
+        <nav aria-labelledby="footerBlockchain">
+          <h2 id="footerBlockchain">Blockchain</h2>
+          <ul>
+            <li><a id="footerContractLink" href="https://sepolia.etherscan.io" target="_blank" rel="noopener noreferrer">Sepolia Etherscan</a></li>
+            <li><a href="https://cloud.google.com/application/web3/faucet/ethereum/sepolia" target="_blank" rel="noopener noreferrer">Sepolia faucet (Google Cloud)</a></li>
+            <li><a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer">Get MetaMask</a></li>
+          </ul>
+        </nav>
+        <nav aria-labelledby="footerDocs">
+          <h2 id="footerDocs">Documentation</h2>
+          <ul>
+            <li><a href="https://remix.ethereum.org" target="_blank" rel="noopener noreferrer">Remix IDE</a></li>
+            <li><a href="https://docs.ethers.org/v6/" target="_blank" rel="noopener noreferrer">ethers.js v6 docs</a></li>
+            <li><a href="https://docs.soliditylang.org/en/v0.8.20/" target="_blank" rel="noopener noreferrer">Solidity 0.8.20 docs</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 CampusSkill · MG3012 Mini dApp</span>
+        <span>Built with Solidity, HTML, CSS, JavaScript and ethers.js v6</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toasts" id="toastRegion" role="status" aria-live="polite"></div>
+
+  <!-- ================= APPLICATION SCRIPT ================= -->
+  <script type="module">
+    // ethers.js v6, pinned version, loaded as a native ES module from the jsDelivr CDN.
+    // This needs an internet connection (see README > Known limitations).
+    import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.min.js";
+
+    // =====================================================================
+    // CONFIGURATION: update CONTRACT_ADDRESS after deploying with Remix.
+    // =====================================================================
+    const CONFIG = {
+      // Deployed CampusSkill contract on Sepolia (deployed with Remix, 8 Nov 2026).
+      CONTRACT_ADDRESS: "0xD7B366017de69acC7AC1003d7Ccd1eCEc791E81d",
+
+      CHAIN_ID: 11155111n,          // Ethereum Sepolia
+      CHAIN_ID_HEX: "0xaa36a7",     // 11155111 in hexadecimal
+      CHAIN_NAME: "Sepolia",
+      EXPLORER_URL: "https://sepolia.etherscan.io",
+
+      // Public Sepolia RPC endpoints used to READ data before a wallet is connected.
+      // They are tried in order; reads switch to MetaMask once it is connected to Sepolia.
+      READ_RPC_URLS: [
+        "https://ethereum-sepolia-rpc.publicnode.com",
+        "https://sepolia.drpc.org",
+      ],
+
+      // Must match MAX_TITLE_LENGTH / MAX_DESCRIPTION_LENGTH in SmartContract.sol (bytes).
+      MAX_TITLE_BYTES: 80,
+      MAX_DESCRIPTION_BYTES: 280,
+    };
+
+    // ABI generated by the Solidity 0.8.20 compiler from SmartContract.sol (contract CampusSkill).
+    // It is identical to the ABI Remix shows under Compiler > ABI.
+    const CONTRACT_ABI = [
+      {"inputs":[{"internalType":"uint256","name":"length","type":"uint256"},{"internalType":"uint256","name":"maxLength","type":"uint256"}],"name":"DescriptionTooLong","type":"error"},
+      {"inputs":[],"name":"EmptyDescription","type":"error"},
+      {"inputs":[],"name":"EmptyTitle","type":"error"},
+      {"inputs":[{"internalType":"uint256","name":"milestoneId","type":"uint256"}],"name":"MilestoneAlreadyCompleted","type":"error"},
+      {"inputs":[{"internalType":"uint256","name":"milestoneId","type":"uint256"}],"name":"MilestoneNotFound","type":"error"},
+      {"inputs":[{"internalType":"uint256","name":"milestoneId","type":"uint256"},{"internalType":"address","name":"caller","type":"address"}],"name":"NotMilestoneCreator","type":"error"},
+      {"inputs":[{"internalType":"uint256","name":"length","type":"uint256"},{"internalType":"uint256","name":"maxLength","type":"uint256"}],"name":"TitleTooLong","type":"error"},
+      {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"id","type":"uint256"},{"indexed":true,"internalType":"address","name":"creator","type":"address"},{"indexed":false,"internalType":"uint256","name":"completedAt","type":"uint256"}],"name":"MilestoneCompleted","type":"event"},
+      {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"id","type":"uint256"},{"indexed":true,"internalType":"address","name":"creator","type":"address"},{"indexed":false,"internalType":"string","name":"title","type":"string"},{"indexed":false,"internalType":"uint256","name":"createdAt","type":"uint256"}],"name":"MilestoneCreated","type":"event"},
+      {"inputs":[{"internalType":"uint256","name":"milestoneId","type":"uint256"}],"name":"completeMilestone","outputs":[],"stateMutability":"nonpayable","type":"function"},
+      {"inputs":[{"internalType":"string","name":"title","type":"string"},{"internalType":"string","name":"description","type":"string"}],"name":"createMilestone","outputs":[{"internalType":"uint256","name":"milestoneId","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},
+      {"inputs":[{"internalType":"uint256","name":"milestoneId","type":"uint256"}],"name":"getMilestone","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"string","name":"title","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"uint256","name":"createdAt","type":"uint256"},{"internalType":"bool","name":"completed","type":"bool"},{"internalType":"uint256","name":"completedAt","type":"uint256"}],"internalType":"struct CampusSkill.Milestone","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},
+      {"inputs":[],"name":"getMilestoneCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+    ];
+
+    // =====================================================================
+    // DOM references (fails loudly at start-up if an element is missing)
+    // =====================================================================
+    const $ = (id) => {
+      const node = document.getElementById(id);
+      if (!node) throw new Error(`CampusSkill: missing DOM element #${id}`);
+      return node;
+    };
+    const dom = {
+      connectBtn: $("connectBtn"),
+      networkLabel: $("networkLabel"), networkDot: $("networkDot"),
+      walletLabel: $("walletLabel"), walletDot: $("walletDot"),
+      bannerArea: $("bannerArea"),
+      heroGreeting: $("heroGreeting"),
+      contractLink: $("contractLink"), footerContractLink: $("footerContractLink"),
+      statTotal: $("statTotal"), statCompleted: $("statCompleted"), statPending: $("statPending"),
+      barCompleted: $("barCompleted"), barPending: $("barPending"),
+      filterGroup: $("filterGroup"), sortBtn: $("sortBtn"), refreshBtn: $("refreshBtn"),
+      syncNote: $("syncNote"), timeline: $("timelineContainer"),
+      progressRing: $("progressRing"), ringFill: $("ringFill"), ringPercent: $("ringPercent"),
+      profileAddress: $("profileAddress"), myCompleted: $("myCompleted"), myPending: $("myPending"),
+      createForm: $("createForm"), titleInput: $("titleInput"), descInput: $("descInput"),
+      titleCounter: $("titleCounter"), descCounter: $("descCounter"),
+      titleError: $("titleError"), descError: $("descError"), createBtn: $("createBtn"),
+      txStatus: $("txStatus"), txMessage: $("txMessage"), txSteps: $("txSteps"),
+      txDetails: $("txDetails"), activityList: $("activityList"),
+      toastRegion: $("toastRegion"),
+    };
+
+    // =====================================================================
+    // Application state (nothing is stored in localStorage; the blockchain is the source of truth)
+    // =====================================================================
+    const state = {
+      hasWallet: typeof window.ethereum !== "undefined",
+      walletProvider: null,   // ethers.BrowserProvider wrapping MetaMask
+      rpcProvider: null,      // ethers.JsonRpcProvider for read-only access
+      verifiedProvider: null, // provider on which contract bytecode was confirmed
+      account: null,          // checksummed address of the connected account
+      chainId: null,          // bigint chain ID reported by MetaMask
+      milestones: [],
+      loaded: false,
+      loading: false,
+      loadError: null,
+      lastSynced: null,
+      filter: "all",
+      newestFirst: true,
+      txBusy: false,
+      pendingCompleteId: null,
+      highlightId: null,
+      activity: [],
+    };
+
+    const ZERO = 0n;
+    const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+    const timeFormat = new Intl.DateTimeFormat(undefined, { timeStyle: "short" });
+    const textEncoder = new TextEncoder();
+    const KNOWN_CHAINS = {
+      "1": "Ethereum Mainnet", "11155111": "Sepolia", "17000": "Holesky", "560048": "Hoodi",
+      "137": "Polygon", "80002": "Polygon Amoy", "56": "BNB Chain", "59144": "Linea",
+      "8453": "Base", "84532": "Base Sepolia", "10": "Optimism", "42161": "Arbitrum One",
+    };
+
+    // =====================================================================
+    // Small helpers
+    // =====================================================================
+
+    /** Safe DOM builder: text is always inserted with textContent / text nodes, never innerHTML. */
+    function el(tag, props = {}, children = []) {
+      const node = document.createElement(tag);
+      for (const [key, value] of Object.entries(props)) {
+        if (value === null || value === undefined || value === false) continue;
+        if (key === "class") node.className = value;
+        else if (key === "text") node.textContent = value;
+        else if (key === "dataset") Object.assign(node.dataset, value);
+        else if (key.startsWith("on") && typeof value === "function") node.addEventListener(key.slice(2), value);
+        else node.setAttribute(key, value === true ? "" : String(value));
+      }
+      for (const child of [].concat(children)) {
+        if (child === null || child === undefined || child === false) continue;
+        node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+      }
+      return node;
+    }
+
+    const shortAddress = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : "");
+    const byteLength = (s) => textEncoder.encode(s).length;
+    const sameAddress = (a, b) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
+    const formatTimestamp = (seconds) => (seconds && seconds > ZERO ? dateFormat.format(new Date(Number(seconds) * 1000)) : "—");
+    const chainName = (id) => KNOWN_CHAINS[String(id)] || `Chain ${id}`;
+    const txUrl = (hash) => `${CONFIG.EXPLORER_URL}/tx/${hash}`;
+    const addressUrl = (address) => `${CONFIG.EXPLORER_URL}/address/${address}`;
+    const isConfigured = () => ethers.isAddress(CONFIG.CONTRACT_ADDRESS);
+    const isConnected = () => !!state.account;
+    const isOnSepolia = () => state.chainId === CONFIG.CHAIN_ID;
+
+    function setButtonLoading(button, loading, label) {
+      button.classList.toggle("is-loading", loading);
+      button.setAttribute("aria-busy", String(loading));
+      const text = button.querySelector(".btn-text");
+      if (label && text) text.textContent = label;
+    }
+
+    function withTimeout(promise, ms, message) {
+      let timer;
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => { timer = setTimeout(() => reject(Object.assign(new Error(message), { code: "TIMEOUT" })), ms); }),
+      ]).finally(() => clearTimeout(timer));
+    }
+
+    /** An error that already carries a user-friendly title and message. */
+    class AppError extends Error {
+      constructor(title, message) { super(message); this.friendly = { title, message }; }
+    }
+
+    // =====================================================================
+    // Error handling
+    // =====================================================================
+
+    /** Walk an error object (any wallet / RPC shape) looking for ABI-encoded custom error data. */
+    function findCustomError(err, iface, depth = 0, seen = new Set()) {
+      if (err === null || err === undefined || depth > 6) return null;
+      if (typeof err === "string") {
+        if (/^0x[0-9a-fA-F]{8}/.test(err)) {
+          try { return iface.parseError(err); } catch { return null; }
+        }
+        return null;
+      }
+      if (typeof err !== "object" || seen.has(err)) return null;
+      seen.add(err);
+      if (err.revert && err.revert.name) return err.revert;
+      for (const key of Object.keys(err)) {
+        const found = findCustomError(err[key], iface, depth + 1, seen);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    /** Collect every nested message string and numeric RPC code from an error. */
+    function inspectError(err, depth = 0, out = { text: "", codes: [] }, seen = new Set()) {
+      if (!err || typeof err !== "object" || depth > 6 || seen.has(err)) return out;
+      seen.add(err);
+      for (const key of ["message", "shortMessage", "reason"]) {
+        if (typeof err[key] === "string") out.text += ` ${err[key]}`;
+      }
+      if (typeof err.code === "number") out.codes.push(err.code);
+      for (const key of ["error", "info", "data", "cause"]) inspectError(err[key], depth + 1, out, seen);
+      return out;
+    }
+
+    const contractInterface = new ethers.Interface(CONTRACT_ABI);
+
+    /** Convert any wallet, RPC, ethers or contract error into a clear title + message. */
+    function friendlyError(err) {
+      if (err && err.friendly) return err.friendly;
+      const { text, codes } = inspectError(err);
+      const lower = text.toLowerCase();
+      const code = err && err.code;
+
+      if (code === "ACTION_REJECTED" || codes.includes(4001) || /user (rejected|denied)/.test(lower)) {
+        return { title: "Request rejected", message: "You rejected the request in MetaMask, so nothing was sent to the blockchain." };
+      }
+      if (codes.includes(-32002) || /already pending/.test(lower)) {
+        return { title: "MetaMask is waiting for you", message: "A MetaMask request is already open. Click the MetaMask extension icon to finish or cancel it." };
+      }
+
+      const custom = findCustomError(err, contractInterface);
+      if (custom) {
+        const [a, b] = custom.args || [];
+        switch (custom.name) {
+          case "EmptyTitle": return { title: "Title is required", message: "The contract rejected an empty title." };
+          case "EmptyDescription": return { title: "Description is required", message: "The contract rejected an empty description." };
+          case "TitleTooLong": return { title: "Title is too long", message: `The title is ${a} bytes; the contract allows at most ${b}.` };
+          case "DescriptionTooLong": return { title: "Description is too long", message: `The description is ${a} bytes; the contract allows at most ${b}.` };
+          case "MilestoneNotFound": return { title: "Milestone not found", message: `Milestone #${a} does not exist on this contract.` };
+          case "NotMilestoneCreator": return { title: "Not your milestone", message: `Only the wallet that created milestone #${a} can complete it. ${shortAddress(b)} is not the creator.` };
+          case "MilestoneAlreadyCompleted": return { title: "Already completed", message: `Milestone #${a} is already marked as completed.` };
+          default: return { title: "Contract rejected the transaction", message: custom.name };
+        }
+      }
+
+      if (code === "INSUFFICIENT_FUNDS" || /insufficient funds/.test(lower)) {
+        return { title: "Not enough Sepolia ETH", message: "Your wallet does not have enough Sepolia test ETH to pay for gas. Get free test ETH from a Sepolia faucet, then try again." };
+      }
+      if (code === "BAD_DATA") {
+        return { title: "Unexpected contract response", message: "The configured address did not return CampusSkill data. Check CONTRACT_ADDRESS and make sure it is the CampusSkill contract on Sepolia." };
+      }
+      if (code === "CALL_EXCEPTION") {
+        return { title: "Transaction reverted", message: "The contract rejected this call. Refresh the page and check that the milestone and contract address are correct." };
+      }
+      if (["NETWORK_ERROR", "SERVER_ERROR", "TIMEOUT"].includes(code) || codes.includes(-32603) || /failed to fetch|network error|timeout/.test(lower)) {
+        return { title: "Blockchain connection problem", message: "Could not reach the Sepolia RPC endpoint. Check your internet connection and try again." };
+      }
+      return { title: "Something went wrong", message: (err && (err.shortMessage || err.message)) || String(err) };
+    }
+
+    // =====================================================================
+    // Toasts
+    // =====================================================================
+    function toast(title, message, kind = "info") {
+      const node = el("div", { class: `toast ${kind}` }, [el("strong", { text: title }), message ? el("span", { text: message }) : null]);
+      dom.toastRegion.append(node);
+      setTimeout(() => node.remove(), kind === "error" ? 9000 : 6000);
+    }
+
+    // =====================================================================
+    // Providers
+    // =====================================================================
+
+    /** Read-only provider: MetaMask when it is on Sepolia, otherwise a public Sepolia RPC. */
+    async function getReadProvider() {
+      if (state.walletProvider && isConnected() && isOnSepolia()) return state.walletProvider;
+      if (state.rpcProvider) return state.rpcProvider;
+
+      let lastError = null;
+      for (const url of CONFIG.READ_RPC_URLS) {
+        const provider = new ethers.JsonRpcProvider(url, Number(CONFIG.CHAIN_ID), { staticNetwork: true });
+        try {
+          await withTimeout(provider.getBlockNumber(), 10000, `RPC ${url} timed out`);
+          state.rpcProvider = provider;
+          return provider;
+        } catch (err) {
+          lastError = err;
+          provider.destroy();
+        }
+      }
+      const fallback = friendlyError(lastError || new Error("No RPC available"));
+      throw new AppError("Cannot reach Sepolia", `${fallback.message} You can also connect MetaMask on Sepolia to read data through your wallet.`);
+    }
+
+    /** Confirms that CONTRACT_ADDRESS holds deployed bytecode on the provider's network. */
+    async function ensureContractDeployed(provider) {
+      if (state.verifiedProvider === provider) return;
+      const code = await provider.getCode(CONFIG.CONTRACT_ADDRESS);
+      if (!code || code === "0x") {
+        throw new AppError("No contract at this address", `There is no smart contract at ${CONFIG.CONTRACT_ADDRESS} on Sepolia. Deploy SmartContract.sol with Remix and paste the deployed address into CONFIG.CONTRACT_ADDRESS.`);
+      }
+      state.verifiedProvider = provider;
+    }
+
+    // =====================================================================
+    // Wallet connection
+    // =====================================================================
+
+    /** Re-read accounts and chain from MetaMask and update the UI. Never opens a MetaMask prompt. */
+    async function syncWallet(accounts) {
+      if (!state.hasWallet) return;
+      const list = accounts || (await window.ethereum.request({ method: "eth_accounts" }));
+      const chainHex = await window.ethereum.request({ method: "eth_chainId" });
+      // "any" lets the provider survive network switches without throwing "network changed".
+      state.walletProvider = new ethers.BrowserProvider(window.ethereum, "any");
+      state.chainId = BigInt(chainHex);
+      state.account = list && list.length ? ethers.getAddress(list[0]) : null;
+      renderWallet();
+      renderBanners();
+      renderProfile();
+    }
+
+    async function connectWallet() {
+      if (!state.hasWallet) {
+        renderBanners();
+        toast("MetaMask not found", "Install the MetaMask browser extension, then reload this page.", "error");
+        return;
+      }
+      setButtonLoading(dom.connectBtn, true, "Connecting…");
+      dom.connectBtn.disabled = true;
+      try {
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        await syncWallet(accounts);
+        if (!isOnSepolia()) await switchToSepolia();
+        if (isConnected()) toast("Wallet connected", `${shortAddress(state.account)} on ${chainName(state.chainId)}`, "success");
+        await loadMilestones();
+      } catch (err) {
+        const f = friendlyError(err);
+        toast(f.title, f.message, "error");
+      } finally {
+        setButtonLoading(dom.connectBtn, false);
+        renderWallet();
+      }
+    }
+
+    /** Ask MetaMask to switch to Sepolia, adding the network first if MetaMask does not know it. */
+    async function switchToSepolia() {
+      if (!state.hasWallet) return;
+      try {
+        await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CONFIG.CHAIN_ID_HEX }] });
+      } catch (err) {
+        const { codes } = inspectError(err);
+        if (codes.includes(4902) || (err && err.code === 4902)) {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: CONFIG.CHAIN_ID_HEX,
+              chainName: "Sepolia",
+              nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
+              rpcUrls: CONFIG.READ_RPC_URLS,
+              blockExplorerUrls: [CONFIG.EXPLORER_URL],
+            }],
+          });
+        } else {
+          const f = friendlyError(err);
+          throw new AppError(f.title === "Request rejected" ? "Network switch rejected" : f.title,
+            f.title === "Request rejected" ? "CampusSkill only works on Sepolia. Switch networks in MetaMask to continue." : f.message);
+        }
+      }
+      await syncWallet();
+    }
+
+    /** Check every precondition for a write transaction, prompting for connect / switch if needed. */
+    async function ensureReadyToWrite() {
+      if (!isConfigured()) throw new AppError("Contract not configured", "Set CONFIG.CONTRACT_ADDRESS in index.html to your deployed Sepolia contract address.");
+      if (!state.hasWallet) throw new AppError("MetaMask not found", "Install MetaMask to publish or complete milestones.");
+      if (!isConnected()) {
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        await syncWallet(accounts);
+      }
+      if (!isOnSepolia()) await switchToSepolia();
+      if (!isOnSepolia()) throw new AppError("Wrong network", "Switch MetaMask to Sepolia to send transactions.");
+      await ensureContractDeployed(state.walletProvider);
+    }
+
+    // =====================================================================
+    // Reading blockchain data
+    // =====================================================================
+    let loadSequence = 0;
+
+    async function loadMilestones() {
+      if (!isConfigured()) { state.loaded = true; renderAll(); return; }
+      const sequence = ++loadSequence;
+      state.loading = true;
+      setButtonLoading(dom.refreshBtn, true);
+      renderTimeline();
+      try {
+        const provider = await getReadProvider();
+        await ensureContractDeployed(provider);
+        const contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+        const count = await contract.getMilestoneCount();          // bigint
+        const ids = [];
+        for (let id = 1n; id <= count; id++) ids.push(id);          // IDs are 1..count (uint256 as BigInt)
+
+        const records = [];
+        for (let i = 0; i < ids.length; i += 8) {                   // small batches to respect public RPC limits
+          const batch = await Promise.all(ids.slice(i, i + 8).map((id) => contract.getMilestone(id)));
+          records.push(...batch);
+        }
+        if (sequence !== loadSequence) return;                       // a newer load started meanwhile
+
+        state.milestones = records.map((m) => ({
+          id: m.id,
+          title: m.title,
+          description: m.description,
+          creator: ethers.getAddress(m.creator),
+          createdAt: m.createdAt,
+          completed: m.completed,
+          completedAt: m.completedAt,
+        }));
+        state.loadError = null;
+        state.lastSynced = new Date();
+      } catch (err) {
+        if (sequence !== loadSequence) return;
+        state.loadError = friendlyError(err);
+      } finally {
+        if (sequence === loadSequence) {
+          state.loading = false;
+          state.loaded = true;
+          setButtonLoading(dom.refreshBtn, false);
+          renderAll();
+        }
+      }
+    }
+
+    // =====================================================================
+    // Writing blockchain data
+    // =====================================================================
+
+    /**
+     * Run a state-changing transaction: get signer -> send -> show hash -> wait for receipt -> refresh.
+     * Success is only reported after the receipt confirms status 1.
+     */
+    async function runTransaction(label, send) {
+      if (state.txBusy) {
+        toast("Transaction in progress", "Please wait for the current transaction to finish.", "info");
+        return null;
+      }
+      state.txBusy = true;
+      renderBusy();
+      const entry = { label, hash: null, status: "pending" };
+      let stage = "sign";
+      try {
+        await ensureReadyToWrite();
+        setTx({ state: "pending", message: `${label}: confirm the transaction in MetaMask…`, steps: { sign: "active" } });
+
+        const signer = await state.walletProvider.getSigner();
+        const contract = new ethers.Contract(CONFIG.CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        const tx = await send(contract);                             // TransactionResponse
+
+        stage = "submit";
+        entry.hash = tx.hash;
+        state.activity.unshift(entry);
+        renderActivity();
+        setTx({ state: "pending", message: `${label}: submitted. Waiting for Sepolia to confirm…`, steps: { sign: "done", submit: "active" }, hash: tx.hash });
+
+        const receipt = await tx.wait(1);                            // TransactionReceipt
+        if (!receipt || receipt.status !== 1) throw new AppError("Transaction failed", "The transaction was mined but reverted.");
+
+        entry.status = "confirmed";
+        setTx({
+          state: "success",
+          message: `${label}: confirmed in block ${receipt.blockNumber}.`,
+          steps: { sign: "done", submit: "done", confirm: "done" },
+          hash: tx.hash, block: receipt.blockNumber, gasUsed: receipt.gasUsed,
+        });
+        return { receipt, contract };
+      } catch (err) {
+        entry.status = "failed";
+        const f = friendlyError(err);
+        const steps = stage === "sign" ? { sign: "failed" } : { sign: "done", submit: "done", confirm: "failed" };
+        setTx({ state: "error", message: `${f.title}. ${f.message}`, steps, hash: entry.hash });
+        toast(f.title, f.message, "error");
+        return null;
+      } finally {
+        state.txBusy = false;
+        renderBusy();
+        renderActivity();
+      }
+    }
+
+    async function handleCreate(event) {
+      event.preventDefault();
+      const title = dom.titleInput.value.trim();
+      const description = dom.descInput.value.trim();
+      if (!validateForm(true)) {
+        toast("Check the form", "Fix the highlighted fields before publishing.", "error");
+        return;
+      }
+      setButtonLoading(dom.createBtn, true, "Publishing…");
+      const result = await runTransaction("Create milestone", (contract) => contract.createMilestone(title, description));
+      setButtonLoading(dom.createBtn, false, "Publish milestone");
+      if (!result) return;
+
+      // Read the new ID from the MilestoneCreated event in the receipt.
+      let newId = null;
+      for (const log of result.receipt.logs) {
+        try {
+          const parsed = result.contract.interface.parseLog(log);
+          if (parsed && parsed.name === "MilestoneCreated") newId = parsed.args.id;
+        } catch { /* log from another contract */ }
+      }
+      dom.createForm.reset();
+      updateCounters();
+      clearFieldErrors();
+      state.highlightId = newId;
+      state.filter = "all";
+      toast("Milestone published", newId !== null ? `Milestone #${newId} is now recorded on Sepolia.` : "Your milestone is now recorded on Sepolia.", "success");
+      await loadMilestones();
+    }
+
+    async function handleComplete(milestoneId) {
+      const milestone = state.milestones.find((m) => m.id === milestoneId);
+      if (!milestone) return;
+      if (!sameAddress(milestone.creator, state.account)) {
+        toast("Not your milestone", "Only the wallet that created this milestone can complete it.", "error");
+        return;
+      }
+      if (milestone.completed) {
+        toast("Already completed", `Milestone #${milestoneId} is already completed.`, "info");
+        return;
+      }
+      state.pendingCompleteId = milestoneId;
+      renderTimeline();
+      const result = await runTransaction(`Complete #${milestoneId}`, (contract) => contract.completeMilestone(milestoneId));
+      state.pendingCompleteId = null;
+      if (result) {
+        state.highlightId = milestoneId;
+        toast("Milestone completed", `Milestone #${milestoneId} is now marked as completed on-chain.`, "success");
+        await loadMilestones();
+      } else {
+        renderTimeline();
+      }
+    }
+
+    // =====================================================================
+    // Form validation
+    // =====================================================================
+    function updateCounters() {
+      const t = byteLength(dom.titleInput.value.trim());
+      const d = byteLength(dom.descInput.value.trim());
+      dom.titleCounter.textContent = `${t} / ${CONFIG.MAX_TITLE_BYTES}`;
+      dom.descCounter.textContent = `${d} / ${CONFIG.MAX_DESCRIPTION_BYTES}`;
+      dom.titleCounter.classList.toggle("over", t > CONFIG.MAX_TITLE_BYTES);
+      dom.descCounter.classList.toggle("over", d > CONFIG.MAX_DESCRIPTION_BYTES);
+    }
+
+    function setFieldError(input, errorNode, message) {
+      errorNode.textContent = message || "";
+      input.setAttribute("aria-invalid", message ? "true" : "false");
+    }
+
+    function clearFieldErrors() {
+      setFieldError(dom.titleInput, dom.titleError, "");
+      setFieldError(dom.descInput, dom.descError, "");
+    }
+
+    /** Validates both fields. When `showEmpty` is false, empty fields are not flagged (live typing). */
+    function validateForm(showEmpty) {
+      const title = dom.titleInput.value.trim();
+      const description = dom.descInput.value.trim();
+      let titleMsg = "";
+      let descMsg = "";
+      if (!title) titleMsg = showEmpty ? "Enter a milestone title." : "";
+      else if (byteLength(title) > CONFIG.MAX_TITLE_BYTES) titleMsg = `Title must be ${CONFIG.MAX_TITLE_BYTES} bytes or fewer.`;
+      if (!description) descMsg = showEmpty ? "Describe what you learned or built." : "";
+      else if (byteLength(description) > CONFIG.MAX_DESCRIPTION_BYTES) descMsg = `Description must be ${CONFIG.MAX_DESCRIPTION_BYTES} bytes or fewer.`;
+      setFieldError(dom.titleInput, dom.titleError, titleMsg);
+      setFieldError(dom.descInput, dom.descError, descMsg);
+      if (showEmpty && titleMsg) dom.titleInput.focus();
+      else if (showEmpty && descMsg) dom.descInput.focus();
+      return !titleMsg && !descMsg && !!title && !!description;
+    }
+
+    // =====================================================================
+    // Rendering
+    // =====================================================================
+    function renderAll() {
+      renderWallet();
+      renderBanners();
+      renderStats();
+      renderProfile();
+      renderTimeline();
+      renderBusy();
+    }
+
+    function renderWallet() {
+      if (!state.hasWallet) {
+        dom.networkLabel.textContent = "No wallet";
+        dom.networkDot.dataset.state = "error";
+        dom.walletLabel.textContent = "MetaMask not found";
+        dom.walletDot.dataset.state = "error";
+        dom.connectBtn.querySelector(".btn-text").textContent = "Install MetaMask";
+        dom.connectBtn.disabled = false;
+      } else if (!isConnected()) {
+        dom.networkLabel.textContent = state.chainId ? chainName(state.chainId) : "Not connected";
+        dom.networkDot.dataset.state = state.chainId ? (isOnSepolia() ? "ok" : "warn") : "idle";
+        dom.walletLabel.textContent = "Not connected";
+        dom.walletDot.dataset.state = "idle";
+        dom.connectBtn.querySelector(".btn-text").textContent = "Connect MetaMask";
+        dom.connectBtn.disabled = false;
+      } else {
+        dom.networkLabel.textContent = chainName(state.chainId);
+        dom.networkDot.dataset.state = isOnSepolia() ? "ok" : "error";
+        dom.walletLabel.textContent = shortAddress(state.account);
+        dom.walletLabel.title = state.account;
+        dom.walletDot.dataset.state = "ok";
+        dom.connectBtn.querySelector(".btn-text").textContent = isOnSepolia() ? "Connected" : "Switch to Sepolia";
+        dom.connectBtn.disabled = isOnSepolia();
+      }
+      dom.heroGreeting.textContent = isConnected() ? `Hi, ${shortAddress(state.account)}` : "Hi, learner";
+
+      const contractHref = isConfigured() ? addressUrl(CONFIG.CONTRACT_ADDRESS) : CONFIG.EXPLORER_URL;
+      dom.contractLink.href = contractHref;
+      dom.footerContractLink.href = contractHref;
+      dom.footerContractLink.textContent = isConfigured() ? "CampusSkill contract on Etherscan" : "Sepolia Etherscan";
+      dom.contractLink.setAttribute("aria-disabled", String(!isConfigured()));
+    }
+
+    function renderBanners() {
+      const banners = [];
+      if (!isConfigured()) {
+        banners.push(el("div", { class: "banner error", role: "alert" }, [
+          el("div", { class: "banner-body" }, [
+            el("strong", { class: "banner-title", text: "Contract address not configured" }),
+            "Deploy SmartContract.sol to Sepolia with Remix, then set ",
+            el("code", { text: "CONFIG.CONTRACT_ADDRESS" }),
+            " in index.html to the deployed address. Reading and writing are disabled until then.",
+          ]),
+        ]));
+      }
+      if (!state.hasWallet) {
+        banners.push(el("div", { class: "banner warn" }, [
+          el("div", { class: "banner-body" }, [
+            el("strong", { class: "banner-title", text: "MetaMask not detected" }),
+            "You can browse milestones in read-only mode. To publish or complete milestones, ",
+            el("a", { href: "https://metamask.io/download/", target: "_blank", rel: "noopener noreferrer", text: "install MetaMask" }),
+            " and reload this page. MetaMask does not run on file:// pages, so open the app through a local web server.",
+          ]),
+        ]));
+      } else if (isConnected() && !isOnSepolia()) {
+        banners.push(el("div", { class: "banner warn", role: "alert" }, [
+          el("div", { class: "banner-body" }, [
+            el("strong", { class: "banner-title", text: `Wrong network: ${chainName(state.chainId)}` }),
+            "CampusSkill runs on Ethereum Sepolia (chain ID 11155111). Switch networks to publish or complete milestones.",
+          ]),
+          el("button", {
+            type: "button", class: "btn btn-primary btn-sm", id: "switchNetworkBtn", text: "Switch to Sepolia",
+            onclick: async () => {
+              try { await switchToSepolia(); await loadMilestones(); } catch (err) { const f = friendlyError(err); toast(f.title, f.message, "error"); }
+            },
+          }),
+        ]));
+      }
+      dom.bannerArea.replaceChildren(...banners);
+    }
+
+    function renderStats() {
+      const ready = isConfigured() && state.loaded && !state.loadError;
+      const total = state.milestones.length;
+      const completed = state.milestones.filter((m) => m.completed).length;
+      const pending = total - completed;
+      dom.statTotal.textContent = ready ? String(total) : "–";
+      dom.statCompleted.textContent = ready ? String(completed) : "–";
+      dom.statPending.textContent = ready ? String(pending) : "–";
+      dom.barCompleted.style.width = ready && total ? `${(completed / total) * 100}%` : "0%";
+      dom.barPending.style.width = ready && total ? `${(pending / total) * 100}%` : "0%";
+    }
+
+    function renderProfile() {
+      const circumference = 2 * Math.PI * 54;
+      if (!isConnected()) {
+        dom.profileAddress.textContent = state.hasWallet ? "Connect your wallet to see your milestones." : "Install MetaMask to track your own milestones.";
+        dom.profileAddress.removeAttribute("title");
+        dom.ringPercent.textContent = "–";
+        dom.ringFill.style.strokeDashoffset = String(circumference);
+        dom.myCompleted.textContent = "0 completed";
+        dom.myPending.textContent = "0 pending";
+        dom.progressRing.setAttribute("aria-label", "Your completion rate: not connected");
+        return;
+      }
+      const mine = state.milestones.filter((m) => sameAddress(m.creator, state.account));
+      const done = mine.filter((m) => m.completed).length;
+      const pct = mine.length ? Math.round((done / mine.length) * 100) : 0;
+      dom.profileAddress.textContent = state.account;
+      dom.profileAddress.title = state.account;
+      dom.ringPercent.textContent = mine.length ? `${pct}%` : "0%";
+      dom.ringFill.style.strokeDashoffset = String(circumference * (1 - pct / 100));
+      dom.myCompleted.textContent = `${done} completed`;
+      dom.myPending.textContent = `${mine.length - done} pending`;
+      dom.progressRing.setAttribute("aria-label", `Your completion rate: ${pct}% (${done} of ${mine.length} milestones)`);
+    }
+
+    function filteredMilestones() {
+      let list = state.milestones;
+      if (state.filter === "mine") list = list.filter((m) => sameAddress(m.creator, state.account));
+      else if (state.filter === "pending") list = list.filter((m) => !m.completed);
+      else if (state.filter === "completed") list = list.filter((m) => m.completed);
+      list = [...list].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+      return state.newestFirst ? list.reverse() : list;
+    }
+
+    function emptyState(title, message, action) {
+      return el("div", { class: "empty-state" }, [el("h3", { text: title }), el("p", { text: message }), action || null]);
+    }
+
+    function renderTimeline() {
+      for (const button of dom.filterGroup.querySelectorAll("button")) {
+        button.setAttribute("aria-pressed", String(button.dataset.filter === state.filter));
+      }
+      dom.sortBtn.textContent = state.newestFirst ? "Newest first" : "Oldest first";
+      dom.timeline.setAttribute("aria-busy", String(state.loading));
+      dom.syncNote.textContent = state.lastSynced
+        ? `Read from the CampusSkill contract on Sepolia · last synced ${timeFormat.format(state.lastSynced)}`
+        : "Milestones are read directly from the CampusSkill contract.";
+
+      if (!isConfigured()) {
+        dom.timeline.replaceChildren(emptyState("Contract not configured yet",
+          "After deploying CampusSkill on Sepolia, add the contract address to CONFIG.CONTRACT_ADDRESS to load on-chain milestones."));
+        return;
+      }
+      if (!state.loaded) {
+        dom.timeline.replaceChildren(el("div", { class: "timeline" }, [el("div", { class: "skeleton" }), el("div", { class: "skeleton" })]));
+        return;
+      }
+      if (state.loadError) {
+        dom.timeline.replaceChildren(emptyState(state.loadError.title, state.loadError.message,
+          el("button", { type: "button", class: "btn btn-primary btn-sm", text: "Try again", onclick: () => loadMilestones() })));
+        return;
+      }
+      if (state.filter === "mine" && !isConnected()) {
+        dom.timeline.replaceChildren(emptyState("Connect to see your milestones",
+          "Your milestones are the ones created by your connected wallet.",
+          state.hasWallet ? el("button", { type: "button", class: "btn btn-primary btn-sm", text: "Connect MetaMask", onclick: connectWallet }) : null));
+        return;
+      }
+
+      const list = filteredMilestones();
+      if (!list.length) {
+        const noneAtAll = state.milestones.length === 0;
+        dom.timeline.replaceChildren(emptyState(
+          noneAtAll ? "No milestones yet" : "Nothing in this view",
+          noneAtAll ? "Be the first learner to record a milestone on this contract." : "Try another filter to see more milestones.",
+          noneAtAll ? el("button", { type: "button", class: "btn btn-primary btn-sm", text: "Create the first milestone", onclick: () => dom.titleInput.focus() }) : null));
+        return;
+      }
+
+      const items = list.map(renderMilestone);
+      dom.timeline.replaceChildren(el("ol", { class: "timeline", "aria-labelledby": "timelineTitle" }, items));
+
+      if (state.highlightId !== null) {
+        const target = dom.timeline.querySelector(`[data-milestone-id="${state.highlightId}"]`);
+        if (target) {
+          target.classList.add("is-new");
+          target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+        state.highlightId = null;
+      }
+    }
+
+    function renderMilestone(m) {
+      const mine = sameAddress(m.creator, state.account);
+      const isCompleting = state.pendingCompleteId === m.id;
+
+      let action;
+      if (m.completed) {
+        action = el("span", { class: "milestone-hint", text: `Completed ${formatTimestamp(m.completedAt)}` });
+      } else if (mine) {
+        const button = el("button", {
+          type: "button", class: `btn btn-success btn-sm${isCompleting ? " is-loading" : ""}`,
+          "aria-label": `Mark milestone ${m.id} as completed`,
+          disabled: state.txBusy || !isOnSepolia(),
+          onclick: () => handleComplete(m.id),
+        }, [el("span", { class: "spinner", "aria-hidden": "true" }), el("span", { class: "btn-text", text: isCompleting ? "Completing…" : "Mark as completed" })]);
+        action = [el("span", { class: "milestone-hint", text: isOnSepolia() ? "You created this milestone." : "Switch to Sepolia to complete." }), button];
+      } else if (isConnected()) {
+        action = el("span", { class: "milestone-hint", text: "Only the creator can complete this milestone." });
+      } else {
+        action = el("span", { class: "milestone-hint", text: "Connect the creator's wallet to complete." });
+      }
+
+      return el("li", { class: `milestone ${m.completed ? "is-completed" : "is-pending"}`, dataset: { milestoneId: m.id.toString() } }, [
+        el("div", { class: "milestone-top" }, [
+          el("span", { class: "chip chip-id", text: `#${m.id}` }),
+          el("span", { class: `chip ${m.completed ? "chip-completed" : "chip-pending"}`, text: m.completed ? "✓ Completed" : "◷ Pending" }),
+          mine ? el("span", { class: "chip chip-mine", text: "You" }) : null,
+        ]),
+        el("h3", { text: m.title }),
+        el("p", { class: "milestone-desc", text: m.description }),
+        el("dl", { class: "meta" }, [
+          el("div", {}, [el("dt", { text: "Creator" }), el("dd", {}, el("a", {
+            href: addressUrl(m.creator), target: "_blank", rel: "noopener noreferrer", class: "mono", title: m.creator, text: shortAddress(m.creator),
+          }))]),
+          el("div", {}, [el("dt", { text: "Created" }), el("dd", { text: formatTimestamp(m.createdAt) })]),
+          el("div", {}, [el("dt", { text: "Completed" }), el("dd", { class: m.completed ? "" : "muted", text: m.completed ? formatTimestamp(m.completedAt) : "Not yet" })]),
+        ]),
+        el("div", { class: "milestone-actions" }, action),
+      ]);
+    }
+
+    function renderBusy() {
+      const cannotWrite = state.txBusy || !isConfigured();
+      dom.createBtn.disabled = cannotWrite;
+      dom.refreshBtn.disabled = state.loading || !isConfigured();
+      for (const button of dom.timeline.querySelectorAll(".milestone .btn-success")) {
+        button.disabled = state.txBusy || !isOnSepolia();
+      }
+    }
+
+    /** Update the transaction panel. steps: { sign, submit, confirm } -> "active" | "done" | "failed". */
+    function setTx({ state: txState, message, steps = {}, hash = null, block = null, gasUsed = null }) {
+      dom.txStatus.dataset.state = txState;
+      dom.txMessage.textContent = message;
+      for (const li of dom.txSteps.querySelectorAll("li")) {
+        const s = steps[li.dataset.step];
+        if (s) li.dataset.state = s; else delete li.dataset.state;
+      }
+      const rows = [];
+      if (hash) {
+        rows.push(el("div", {}, [el("dt", { text: "Transaction hash" }), el("dd", {}, el("a", { href: txUrl(hash), target: "_blank", rel: "noopener noreferrer", text: hash }))]));
+        rows.push(el("div", {}, [el("dt", { text: "Explorer" }), el("dd", {}, el("a", { href: txUrl(hash), target: "_blank", rel: "noopener noreferrer", text: "View on Sepolia Etherscan ↗" }))]));
+      }
+      if (block !== null) rows.push(el("div", {}, [el("dt", { text: "Block" }), el("dd", { text: String(block) })]));
+      if (gasUsed !== null) rows.push(el("div", {}, [el("dt", { text: "Gas used" }), el("dd", { text: gasUsed.toString() })]));
+      dom.txDetails.replaceChildren(...rows);
+    }
+
+    function renderActivity() {
+      const items = state.activity.slice(0, 5).map((a) => el("li", {}, [
+        el("a", { class: "activity-label", href: txUrl(a.hash), target: "_blank", rel: "noopener noreferrer", title: a.hash, text: `${a.label} · ${shortAddress(a.hash)}` }),
+        el("span", {
+          class: `activity-state ${a.status === "confirmed" ? "ok" : a.status === "failed" ? "bad" : ""}`,
+          text: a.status === "confirmed" ? "Confirmed" : a.status === "failed" ? "Failed" : "Pending",
+        }),
+      ]));
+      dom.activityList.replaceChildren(...items);
+    }
+
+    // =====================================================================
+    // Event wiring
+    // =====================================================================
+    function bindEvents() {
+      dom.connectBtn.addEventListener("click", () => {
+        if (!state.hasWallet) { window.open("https://metamask.io/download/", "_blank", "noopener"); return; }
+        if (isConnected() && !isOnSepolia()) {
+          switchToSepolia().then(loadMilestones).catch((err) => { const f = friendlyError(err); toast(f.title, f.message, "error"); });
+          return;
+        }
+        connectWallet();
+      });
+      dom.refreshBtn.addEventListener("click", () => loadMilestones());
+      dom.sortBtn.addEventListener("click", () => { state.newestFirst = !state.newestFirst; renderTimeline(); renderBusy(); });
+      dom.filterGroup.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-filter]");
+        if (!button) return;
+        state.filter = button.dataset.filter;
+        renderTimeline();
+        renderBusy();
+      });
+      dom.createForm.addEventListener("submit", handleCreate);
+      for (const input of [dom.titleInput, dom.descInput]) {
+        input.addEventListener("input", () => { updateCounters(); validateForm(false); });
+      }
+
+      if (state.hasWallet && typeof window.ethereum.on === "function") {
+        window.ethereum.on("accountsChanged", async (accounts) => {
+          await syncWallet(accounts);
+          if (isConnected()) toast("Account changed", `Now using ${shortAddress(state.account)}.`, "info");
+          else toast("Wallet disconnected", "Connect MetaMask again to publish or complete milestones.", "info");
+          renderAll();
+        });
+        window.ethereum.on("chainChanged", async () => {
+          state.verifiedProvider = null;   // re-check contract code on the new network
+          await syncWallet();
+          toast("Network changed", `MetaMask is now on ${chainName(state.chainId)}.`, isOnSepolia() ? "success" : "error");
+          await loadMilestones();
+        });
+      }
+    }
+
+    async function init() {
+      bindEvents();
+      updateCounters();
+      renderAll();
+      if (state.hasWallet) {
+        try { await syncWallet(); } catch (err) { const f = friendlyError(err); toast(f.title, f.message, "error"); }
+      }
+      await loadMilestones();
+    }
+
+    init().catch((err) => {
+      console.error(err);
+      const f = friendlyError(err);
+      toast(f.title, f.message, "error");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" width="480" height="360" role="img" aria-labelledby="cs-title cs-desc">
+  <title id="cs-title">CampusSkill learning milestones</title>
+  <desc id="cs-desc">Three chained blocks rise like stairs toward a completion flag, with a graduation cap and an open book at the base, representing learning milestones recorded on a blockchain.</desc>
+  <defs>
+    <linearGradient id="cs-block-top" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B8CFF"/>
+      <stop offset="1" stop-color="#3D6BF0"/>
+    </linearGradient>
+    <linearGradient id="cs-block-left" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1D2F6B"/>
+      <stop offset="1" stop-color="#131F4A"/>
+    </linearGradient>
+    <linearGradient id="cs-block-right" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2A47A8"/>
+      <stop offset="1" stop-color="#1C3283"/>
+    </linearGradient>
+    <linearGradient id="cs-done-top" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5EEAB0"/>
+      <stop offset="1" stop-color="#22C58B"/>
+    </linearGradient>
+    <linearGradient id="cs-done-left" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E5D46"/>
+      <stop offset="1" stop-color="#0A4434"/>
+    </linearGradient>
+    <linearGradient id="cs-done-right" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#148A63"/>
+      <stop offset="1" stop-color="#0F6B4D"/>
+    </linearGradient>
+    <radialGradient id="cs-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- soft background shapes -->
+  <circle cx="300" cy="170" r="150" fill="url(#cs-glow)"/>
+  <circle cx="392" cy="70" r="38" fill="#0B1020" fill-opacity="0.06"/>
+  <circle cx="86" cy="96" r="24" fill="#0B1020" fill-opacity="0.05"/>
+  <ellipse cx="250" cy="318" rx="190" ry="20" fill="#0B1020" fill-opacity="0.10"/>
+
+  <!-- dotted progress path -->
+  <path d="M96 286 C 160 250, 190 240, 222 214 S 300 150, 352 112" fill="none" stroke="#0B1020" stroke-opacity="0.22" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 10"/>
+
+  <!-- Block 1 (completed) -->
+  <g transform="translate(70 214)">
+    <polygon points="60,0 120,30 60,60 0,30" fill="url(#cs-done-top)"/>
+    <polygon points="0,30 60,60 60,104 0,74" fill="url(#cs-done-left)"/>
+    <polygon points="60,60 120,30 120,74 60,104" fill="url(#cs-done-right)"/>
+    <path d="M44 30 l11 10 l22 -20" fill="none" stroke="#0B1020" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Block 2 (completed) -->
+  <g transform="translate(176 156)">
+    <polygon points="60,0 120,30 60,60 0,30" fill="url(#cs-done-top)"/>
+    <polygon points="0,30 60,60 60,126 0,96" fill="url(#cs-done-left)"/>
+    <polygon points="60,60 120,30 120,96 60,126" fill="url(#cs-done-right)"/>
+    <path d="M44 30 l11 10 l22 -20" fill="none" stroke="#0B1020" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Block 3 (in progress) -->
+  <g transform="translate(282 98)">
+    <polygon points="60,0 120,30 60,60 0,30" fill="url(#cs-block-top)"/>
+    <polygon points="0,30 60,60 60,148 0,118" fill="url(#cs-block-left)"/>
+    <polygon points="60,60 120,30 120,118 60,148" fill="url(#cs-block-right)"/>
+    <circle cx="60" cy="30" r="13" fill="none" stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="5"/>
+    <path d="M60 23 v7 l5 4" fill="none" stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- chain links between blocks -->
+  <g fill="none" stroke="#0B1020" stroke-width="6" stroke-linecap="round">
+    <rect x="160" y="236" width="30" height="16" rx="8" transform="rotate(-28 175 244)"/>
+    <rect x="178" y="226" width="30" height="16" rx="8" transform="rotate(-28 193 234)" stroke="#3D6BF0"/>
+    <rect x="266" y="178" width="30" height="16" rx="8" transform="rotate(-28 281 186)"/>
+    <rect x="284" y="168" width="30" height="16" rx="8" transform="rotate(-28 299 176)" stroke="#3D6BF0"/>
+  </g>
+
+  <!-- completion flag on top block -->
+  <g transform="translate(342 34)">
+    <rect x="-2" y="0" width="5" height="96" rx="2.5" fill="#0B1020"/>
+    <path d="M3 4 h52 l-12 16 l12 16 h-52 z" fill="#FF8A5B"/>
+    <circle cx="0.5" cy="0" r="6" fill="#0B1020"/>
+  </g>
+
+  <!-- graduation cap -->
+  <g transform="translate(36 150)">
+    <polygon points="44,0 88,18 44,36 0,18" fill="#0B1020"/>
+    <path d="M18 27 v16 c0 8 52 8 52 0 v-16 l-26 11 z" fill="#1C2547"/>
+    <path d="M80 21 v22" stroke="#0B1020" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="80" cy="46" r="5" fill="#FFC857"/>
+  </g>
+
+  <!-- open book -->
+  <g transform="translate(396 236)">
+    <path d="M0 10 c14 -8 28 -8 34 0 v40 c-6 -8 -20 -8 -34 0 z" fill="#FFFFFF"/>
+    <path d="M68 10 c-14 -8 -28 -8 -34 0 v40 c6 -8 20 -8 34 0 z" fill="#F1ECFF"/>
+    <path d="M34 10 v40" stroke="#0B1020" stroke-opacity="0.35" stroke-width="2"/>
+    <g stroke="#3D6BF0" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.7">
+      <path d="M8 20 h18"/><path d="M8 28 h14"/><path d="M42 20 h18"/><path d="M42 28 h12"/>
+    </g>
+  </g>
+
+  <!-- sparkles -->
+  <g fill="#FFFFFF">
+    <path d="M140 70 l4 12 l12 4 l-12 4 l-4 12 l-4 -12 l-12 -4 l12 -4 z"/>
+    <path d="M440 150 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3 z"/>
+    <path d="M236 60 l2.5 7 l7 2.5 l-7 2.5 l-2.5 7 l-2.5 -7 l-7 -2.5 l7 -2.5 z" fill-opacity="0.8"/>
+  </g>
+</svg>
